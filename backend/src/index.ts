@@ -10,6 +10,8 @@ import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import connctDatabase from "./config/database.config";
 import authRoutes from "./routes/auth.route";
 import passport from "passport";
+import { passportAuthenticateJwt } from "./config/passport.config";
+import userRoutes from "./routes/user.route";
 
 const app = express();
 
@@ -27,6 +29,7 @@ app.use(
 );
 
 app.use(`${BASE_PATH}/auth`, authRoutes);
+app.use(`${BASE_PATH}/user`, passportAuthenticateJwt, userRoutes);
 
 app.get(
   "/",

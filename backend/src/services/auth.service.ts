@@ -46,6 +46,9 @@ export const registerService = async (body: RegisterSchemaType) => {
   }
 };
 
+
+
+
 export const loginService = async (body: LoginSchemaType) => {
   const { email, password } = body;
   const user = await UserModel.findOne({ email });
@@ -62,7 +65,7 @@ export const loginService = async (body: LoginSchemaType) => {
     {
       userId: user.id,
     },
-    { _id: 1, frequency: 1, isEnabled: 1 },
+    { _id: 1, frequency: 1, isEnabled: 1 }
   ).lean();
 
   return {
