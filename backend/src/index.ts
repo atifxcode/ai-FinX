@@ -8,10 +8,14 @@ import { errorHandler } from "./middlewares/errorHandler.middleware";
 import { BadRequestException } from "./utils/app-error";
 import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import connctDatabase from "./config/database.config";
-import authRoutes from "./routes/auth.route";
+
 import passport from "passport";
 import { passportAuthenticateJwt } from "./config/passport.config";
+
+// ----------------------------ROUTES---------------------------
 import userRoutes from "./routes/user.route";
+import authRoutes from "./routes/auth.route";
+import transactionRoute from "./routes/transaction.route";
 
 const app = express();
 
@@ -30,6 +34,7 @@ app.use(
 
 app.use(`${BASE_PATH}/auth`, authRoutes);
 app.use(`${BASE_PATH}/user`, passportAuthenticateJwt, userRoutes);
+app.use(`${BASE_PATH}/transaction`, passportAuthenticateJwt, transactionRoute)
 
 app.get(
   "/",
