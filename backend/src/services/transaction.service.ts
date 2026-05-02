@@ -264,19 +264,107 @@ export const bulkTransactionService = async (
 
 
 
-export const scanReceiptService = async (
-  file: Express.Multer.File | undefined
-) => {
+// export const scanReceiptService = async (
+//   file: Express.Multer.File | undefined
+// ) => {
+//   if (!file) throw new BadRequestException("No file uploaded");
+
+//   try {
+//     if (!file.path) throw new BadRequestException("failed to upload file");
+
+//     console.log(file.path);
+
+//     const responseData = await axios.get(file.path, {
+//       responseType: "arraybuffer",
+//     });
+//     const base64String = Buffer.from(responseData.data).toString("base64");
+
+//     if (!base64String) throw new BadRequestException("Could not process file");
+
+//     const result = await genAI.models.generateContent({
+//       model: genAIModel,
+//       contents: [
+//         createUserContent([
+//           receiptPrompt,
+//           createPartFromBase64(base64String, file.mimetype),
+//         ]),
+//       ],
+//       config: {
+//         temperature: 0,
+//         topP: 1,
+//         responseMimeType: "application/json",
+//       },
+//     });
+
+//     const response = result.text;
+//     const cleanedText = response?.replace(/```(?:json)?\n?/g, "").trim();
+
+//     if (!cleanedText)
+//       return {
+//         error: "Could not read reciept  content",
+//       };
+
+//     const data = JSON.parse(cleanedText);
+
+//     if (!data.amount || !data.date) {
+//       return { error: "Reciept missing required information" };
+//     }
+
+//     return {
+//       title: data.title || "Receipt",
+//       amount: data.amount,
+//       date: data.date,
+//       description: data.description,
+//       category: data.category,
+//       paymentMethod: data.paymentMethod,
+//       type: data.type,
+//       receiptUrl: file.path,
+//     };
+//   } catch (error) {
+//     return { error: "Reciept scanning  service unavailable" };
+//   }
+// };
+
+export const scanReceiptService = async (file: Express.Multer.File | undefined) => {
   if (!file) throw new BadRequestException("No file uploaded");
 
   try {
-    if (!file.path) throw new BadRequestException("failed to upload file");
+    if (!file.path) throw new BadRequestException("Failed to upload file");
 
-    console.log(file.path);
+    console.log("Fetching image from:", file.path);
 
-    const responseData = await axios.get(file.path, {
-      responseType: "arraybuffer",
-    });
+    // Add retry logic
+    let responseData: { data: Buffer } | undefined;
+    let retries = 3;
+    
+    while (retries > 0) {
+      try {
+        responseData = await axios.get(file.path, {
+          responseType: "arraybuffer",
+          timeout: 15000, // 15 second timeout
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+          },
+          // For self-signed certificates in development
+          httpsAgent: process.env.NODE_ENV === 'development' 
+            ? new (require('https').Agent)({ rejectUnauthorized: false })
+            : undefined,
+        });
+        break; // Success, exit retry loop
+      } catch (err: unknown) {
+        retries--;
+        console.log(`Retry ${3 - retries} failed. Retries left: ${retries}`);
+        if (retries === 0) throw err;
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+      }
+    }
+
+    // ✅ Fix: Check if responseData exists
+    if (!responseData || !responseData.data) {
+      throw new BadRequestException("Failed to fetch image from Cloudinary");
+    }
+
     const base64String = Buffer.from(responseData.data).toString("base64");
 
     if (!base64String) throw new BadRequestException("Could not process file");
@@ -299,15 +387,14 @@ export const scanReceiptService = async (
     const response = result.text;
     const cleanedText = response?.replace(/```(?:json)?\n?/g, "").trim();
 
-    if (!cleanedText)
-      return {
-        error: "Could not read reciept  content",
-      };
+    if (!cleanedText) {
+      throw new BadRequestException("Could not read receipt content");
+    }
 
     const data = JSON.parse(cleanedText);
 
     if (!data.amount || !data.date) {
-      return { error: "Reciept missing required information" };
+      throw new BadRequestException("Receipt missing required information");
     }
 
     return {
@@ -320,7 +407,24 @@ export const scanReceiptService = async (
       type: data.type,
       receiptUrl: file.path,
     };
-  } catch (error) {
-    return { error: "Reciept scanning  service unavailable" };
+  } catch (error: unknown) {  // ✅ Fix: Type annotation for error
+    console.error("Detailed error:", {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      code: error instanceof Error && (error as any).code ? (error as any).code : undefined,
+      status: error instanceof Error && (error as any).response?.status ? (error as any).response.status : undefined,
+      statusText: error instanceof Error && (error as any).response?.statusText ? (error as any).response.statusText : undefined,
+      url: file?.path,
+    });
+    
+    // ✅ Fix: Proper error handling with type checking
+    if (error instanceof BadRequestException) {
+      throw error;
+    }
+    
+    if (error instanceof Error) {
+      throw new BadRequestException(`Receipt scanning failed: ${error.message}`);
+    }
+    
+    throw new BadRequestException("Receipt scanning service unavailable");
   }
 };
