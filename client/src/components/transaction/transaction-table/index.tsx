@@ -4,6 +4,7 @@ import { transactionColumns } from "./column";
 import { _TRANSACTION_TYPE, _TransactionType } from "@/constant";
 import { useState } from "react";
 import useDebouncedSearch from "@/hooks/use-debounce-search";
+import { useGetAllTransactionsQuery } from "@/features/transaction/transactionAPI";
 
 type FilterType = {
   type?: _TransactionType | undefined;
@@ -30,26 +31,20 @@ const TransactionTable = (props: {
   // const [bulkDeleteTransaction, { isLoading: isBulkDeleting }] =
   //   useBulkDeleteTransactionMutation();
 
-  // const { data, isFetching } = useGetAllTransactionsQuery({
-  //   keyword: debouncedTerm,
-  //   type: filter.type,
-  //   recurringStatus: filter.recurringStatus,
-  //   pageNumber: filter.pageNumber,
-  //   pageSize: filter.pageSize,
-  // });
+  const { data, isFetching } = useGetAllTransactionsQuery({
+    keyword: debouncedTerm,
+    type: filter.type,
+    recurringStatus: filter.recurringStatus,
+    pageNumber: filter.pageNumber,
+    pageSize: filter.pageSize,
+  });
 
-  // const transactions = data?.transactions || [];
-  // const pagination = {
-  //   totalItems: data?.pagination?.totalCount || 0,
-  //   totalPages: data?.pagination?.totalPages || 0,
-  //   pageNumber: filter.pageNumber,
-  //   pageSize: filter.pageSize,
-  // };
-
+  const transactions = data?.transactions || [];
+  console.log(transactions, "transactions")
 
   const pagination = {
-    totalItems: 20,
-    totalPages: 1,
+    totalItems: data?.pagination?.totalCount || 0,
+    totalPages: data?.pagination?.totalPages || 0,
     pageNumber: filter.pageNumber,
     pageSize: filter.pageSize,
   };
@@ -93,7 +88,8 @@ const TransactionTable = (props: {
 
   return (
     <DataTable
-      data={TRANSACTION_DATA} //transactions
+      data={TRANSACTION_DATA} //transactions*
+      // data={transactions}
       columns={transactionColumns}
       searchPlaceholder="Search transactions..."
       isLoading={false}

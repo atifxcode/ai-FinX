@@ -32,15 +32,15 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      state.accessToken = action.payload.token;
+      state.accessToken = action.payload.accessToken;
       state.expiresAt = action.payload.expiresAt;
       state.user = action.payload.user;
       state.reportSetting = action.payload.reportSetting;
     },
     updateCredentials: (state, action) => {
-      const { token, expiresAt, user, reportSetting } = action.payload;
+      const { accessToken, expiresAt, user, reportSetting } = action.payload;
 
-      if (token !== undefined) state.accessToken = token;
+      if (accessToken !== undefined) state.accessToken = accessToken;
       if (expiresAt !== undefined) state.expiresAt = expiresAt;
       if (user !== undefined) state.user = { ...state.user, ...user };
       if (reportSetting !== undefined)

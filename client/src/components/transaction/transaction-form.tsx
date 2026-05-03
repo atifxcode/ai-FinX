@@ -41,6 +41,8 @@ import { Switch } from "../ui/switch";
 import CurrencyInputField from "../ui/currency-input";
 import { SingleSelector } from "../ui/single-select";
 import { AIScanReceiptData } from "@/features/transaction/transationType";
+import { useCreateTransactionMutation } from "@/features/transaction/transactionAPI";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -85,8 +87,8 @@ const TransactionForm = (props: {
   // );
   // const editData = data?.data;
 
-  // const [createTransaction, { isLoading: isCreating }] =
-  //   useCreateTransactionMutation();
+  const [createTransaction, { isLoading: isCreating }] =
+    useCreateTransactionMutation();
 
   // const [updateTransaction, { isLoading: isUpdating }] =
   //   useUpdateTransactionMutation();
@@ -178,16 +180,16 @@ const TransactionForm = (props: {
       // });
       return;
     }
-    // createTransaction(payload)
-    //   .unwrap()
-    //   .then(() => {
-    //     form.reset();
-    //     onCloseDrawer?.();
-    //     toast.success("Transaction created successfully");
-    //   })
-    //   .catch((error) => {
-    //     toast.error(error.data.message || "Failed to create transaction");
-    //   });
+    createTransaction(payload)
+      .unwrap()
+      .then(() => {
+        form.reset();
+        onCloseDrawer?.();
+        toast.success("Transaction created successfully");
+      })
+      .catch((error) => {
+        toast.error(error.data.message || "Failed to create transaction");
+      });
     
   };
 
@@ -216,7 +218,7 @@ const TransactionForm = (props: {
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                     className="flex space-x-2"
-                    disabled={isScanning}
+                    disabled={isScanning }
                   >
                     <label
                       htmlFor={_TRANSACTION_TYPE.INCOME}
@@ -496,7 +498,10 @@ const TransactionForm = (props: {
           </div>
 
           <div className="sticky bottom-0 bg-white dark:bg-background pb-2">
-            <Button type="submit" className="w-full !text-white" disabled={isScanning}>
+            <Button 
+            type="submit" 
+            className="w-full !text-white" 
+            disabled={isScanning || isCreating}>
               {isEdit ? "Update" : "Save"}
             </Button>
           </div>

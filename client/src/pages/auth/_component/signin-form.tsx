@@ -16,6 +16,9 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Loader } from "lucide-react";
+import { useLoginMutation } from "@/features/auth/authAPI";
+import { useAppDispatch } from "@/app/hook";
+import { setCredentials } from "@/features/auth/authSlice";
 
 const schema = z.object({
   email: z.string().email("Invalid email address"),
@@ -28,37 +31,29 @@ const SignInForm = ({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"form">) => {
-  //const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  // const [login,{isLoading}] = useLoginMutation();
-
-
-  const isLoading = false;
+  const [login,{isLoading}] = useLoginMutation();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
-    toast.success("Login successful");
-    setTimeout(() => {
-      navigate(PROTECTED_ROUTES.OVERVIEW);
-    }, 1000);
+  const onSubmit = (values: FormValues) => {
 
-    // login(values)
-    // .unwrap()
-    // .then((data) => {
-    //   dispatch(setCredentials(data));
-    //   toast.success("Login successful");
-    //   setTimeout(() => {
-    //     navigate(PROTECTED_ROUTES.OVERVIEW);
-    //   }, 1000);
-    // })
-    // .catch((error) => {
-    //   console.log(error);
-    //   toast.error(error.data?.message || "Failed to login");
-    // });
+    login(values)
+    .unwrap()
+    .then((data) => {
+      dispatch(setCredentials(data));
+      toast.success("Login successful");
+      setTimeout(() => {
+        navigate(PROTECTED_ROUTES.OVERVIEW);
+      }, 1000);
+    })
+    .catch((error) => {
+      console.log(error);
+      toast.error(error.data?.message || "Failed to login");
+    });
   };
 
   return (
