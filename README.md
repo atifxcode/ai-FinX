@@ -56,4 +56,7 @@ npm run dev
 
 ## Screenshots
 
-The project UI shows an overview dashboard with a recent transactions table and transaction summary cards. The attached screenshots illustrate the app layout and the recent transactions list.
+<img width="1499" height="829" alt="image" src="https://github.com/user-attachments/assets/362cf26a-6d73-47de-abcf-907a9408bbff" />
+<img width="1765" height="982" alt="image" src="https://github.com/user-attachments/assets/8437f03f-a6f8-484a-a888-e28d920b2411" />
+
+
